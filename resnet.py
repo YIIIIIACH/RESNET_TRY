@@ -182,7 +182,7 @@ def resnet50( input_shape):
     x = tf.keras.layers.GlobalAveragePooling2D()(x)
 
     bbox = tf.keras.layers.Dense(  4,name='bbox', kernel_regularizer=tf.keras.regularizers.l2(L2_WEIGHT_DECAY),bias_regularizer=tf.keras.regularizers.l2(L2_WEIGHT_DECAY))(x)                                                 
-    landmark = tf.keras.layers.Dense(  10,name='landmark' , kernel_regularizer=tf.keras.regularizers.l2(L2_WEIGHT_DECAY),bias_regularizer=tf.keras.regularizers.l2(L2_WEIGHT_DECAY))(x) 
+    
     # Create model.
-    return tf.keras.models.Model(inputs=[img_input], outputs=[bbox,landmark], name='resnet50')
+    return tf.keras.models.Model(inputs=[img_input], outputs=[bbox], name='resnet50')
 

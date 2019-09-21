@@ -9,19 +9,19 @@ from os import listdir
 from os.path import isfile, join
 from resnet  import resnet50
 #-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'  # block the warning message on tensorflow
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # block the warning message on tensorflow
 #-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 											# # # #											
 epochs = 100
 										#PART 1#
 											# # # # 
-data_root = pathlib.Path('/home/yiiiiiach/MTCNN_TRY/image_align_celeba/')          #  打開  ./img_of_all.json 、image directory 將所有 landmark 與 bbox 標注 、圖片path 
+data_root = pathlib.Path('/home/yiiiiiach/MTCNN_TRY/')          #  打開  ./img_of_all.json 、image directory 將所有 landmark 與 bbox 標注 、圖片path 
 										   #  儲存到 1. all_image_paths  2. all_image_bbox 3. all_image_landmark 三個list 中
 
 ROOT_DIR = os.getcwd()
-align_image_path = os.path.join(ROOT_DIR,'img_align_celeba/')
+align_image_path = os.path.join(ROOT_DIR,'img_celeba/')
 
-with open('./10000img.json', 'r') as f:
+with open('./img5000.json', 'r') as f:
 	data = json.load(f)	
 	tuple_of_data = len(data)	
 	print('tuple_of_data',tuple_of_data )
@@ -29,13 +29,13 @@ with open('./10000img.json', 'r') as f:
 
 all_image_paths = []
 all_image_bbox = []
-all_image_landmark = []
+all_image_size = []
 
 
 for i in range(0,tuple_of_data):
-	all_image_paths.append(align_image_path + data[i][0]) 
+	all_image_paths.append( data[i][0]) 
 	all_image_bbox.append(data[i][1:5])
-	all_image_landmark.append(data[i][5:15])
+	all_image_size.append(data[i][5:6])
 #random.shuffle(all_image_paths)          C O N S I D E R I N G   T O   U S E
 #-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 											# # # #											
@@ -49,7 +49,7 @@ def preprocess_image(image):
   return image
 
 def load_and_preprocess_image(path):
-  image = tf.read_file(path)
+  image = tf.io.read_file(path)
   return preprocess_image(image)
 #-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 											# # # #											
@@ -63,10 +63,10 @@ image_ds = path_ds.map(load_and_preprocess_image , num_parallel_calls=AUTOTUNE)
 								            #  tf.data.Dataset.map(  <function_name>  )  ==> 將 Class Dataset 裡面的資料使用function操作
 									    #  tf.cast ( <object> , <dtype> )  ==> 轉換資料格式
 all_image_bbox_ds = tf.data.Dataset.from_tensor_slices(tf.cast(all_image_bbox, tf.int64))
-all_image_landmark_ds = tf.data.Dataset.from_tensor_slices(tf.cast(all_image_landmark, tf.int64))
+#all_image_landmark_ds = tf.data.Dataset.from_tensor_slices(tf.cast(all_image_landmark, tf.int64))   # no need landmark in this project
 
 
-label_ds = tf.data.Dataset.zip((all_image_bbox_ds , all_image_landmark_ds))#  tf.data.Dataset.zip(( <Dataset> , <Dataset> , ........... ))   將Dataset 結合在一起 (要注意是否與 model 合適）
+label_ds = tf.data.Dataset.zip((all_image_bbox_ds ))#  tf.data.Dataset.zip(( <Dataset> , <Dataset> , ........... ))   將Dataset 結合在一起 (要注意是否與 model 合適）
 image_label_ds = tf.data.Dataset.zip((image_ds, label_ds))                 #  image_label_ds 結構解析 ==>>
 									#     [  [image]  , [ bbox ,  landmark ]  ]
 									#        輸入         label_1  label_2
@@ -96,9 +96,9 @@ model = resnet50( (48,48,3) )
                   
 #  Optimizer() change ??   tf.train.AdamOptimizer()  OR   tf.keras.optimizers.RMSprop(0.001)   #因為輸出為 regression 故使用 RMSoptimizer      
 model.compile(optimizer=tf.keras.optimizers.Adagrad(lr=0.01, epsilon=None, decay=0.00001),
-              loss={'bbox':'mean_squared_error','landmark':'mean_squared_error'},loss_weights={'bbox':1 , 'landmark':0.5 },metrics=["accuracy"])
+              loss={'bbox':'mean_squared_error'},loss_weights={'bbox':1  },metrics=["accuracy"])
  			# 宣告 每個輸出使用的loss function 以及各自權重 、 可以發現到其 資料結構與當初 宣告 image_label_ds 結構呼應
-#model.summary()							 # echo model 的架構與參數量		    
+model.summary()							 # echo model 的架構與參數量		    
 									
 if os.path.isfile('weight_file/resnet_final_weight.h5'):
 										     
