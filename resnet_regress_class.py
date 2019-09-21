@@ -97,19 +97,23 @@ model = resnet50( (48,48,3) )
 #  Optimizer() change ??   tf.train.AdamOptimizer()  OR   tf.keras.optimizers.RMSprop(0.001)   #因為輸出為 regression 故使用 RMSoptimizer      
 model.compile(optimizer=tf.keras.optimizers.Adagrad(lr=0.01, epsilon=None, decay=0.00001),
               loss={'bbox':'mean_squared_error','landmark':'mean_squared_error'},loss_weights={'bbox':1 , 'landmark':0.5 },metrics=["accuracy"])
-											      # 宣告 每個輸出使用的loss function 以及各自權重 、 可以發現到其 資料結構與當初 宣告 image_label_ds 結構呼應
-model.summary()										      # echo model 的架構與參數量
-#model.load_weights('resnet_final_weight.h5')
+ 			# 宣告 每個輸出使用的loss function 以及各自權重 、 可以發現到其 資料結構與當初 宣告 image_label_ds 結構呼應
+#model.summary()							 # echo model 的架構與參數量		    
+									
+if os.path.isfile('weight_file/resnet_final_weight.h5'):
+										     
+	model.load_weights('weight_file/resnet_final_weight.h5')
+
 #steps_per_epoch=tf.ceil(len(all_image_paths)/BATCH_SIZE).numpy()
 
 
 for times in range(0 , int(epochs/10)):
 	model.fit(image_label_ds, epochs=10, steps_per_epoch=100)                                    # 丟入 model 訓練
 	
-	model.save_weights('resnet_' + str(times*10) + 'weight.h5')   #save our weight
+	model.save_weights('weight_file/resnet_' + str(times*10) + 'weight.h5')   #save our weight
 
 
-model.save_weights('resnet_final_weight.h5')
+model.save_weights('weight_file/resnet_final_weight.h5')
 
 
 
