@@ -9,10 +9,11 @@ from os import listdir
 from os.path import isfile, join
 from resnet  import resnet50
 #-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '1'  # block the warning message on tensorflow
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'  # block the warning message on tensorflow
 #-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 											# # # #											
-											#PART 1#
+epochs = 100
+										#PART 1#
 											# # # # 
 data_root = pathlib.Path('/home/yiiiiiach/MTCNN_TRY/image_align_celeba/')          #  打開  ./img_of_all.json 、image directory 將所有 landmark 與 bbox 標注 、圖片path 
 										   #  儲存到 1. all_image_paths  2. all_image_bbox 3. all_image_landmark 三個list 中
@@ -98,15 +99,17 @@ model.compile(optimizer=tf.keras.optimizers.Adagrad(lr=0.01, epsilon=None, decay
               loss={'bbox':'mean_squared_error','landmark':'mean_squared_error'},loss_weights={'bbox':1 , 'landmark':0.5 },metrics=["accuracy"])
 											      # 宣告 每個輸出使用的loss function 以及各自權重 、 可以發現到其 資料結構與當初 宣告 image_label_ds 結構呼應
 model.summary()										      # echo model 的架構與參數量
-model.load_weights('resnet_weight.h5')
+#model.load_weights('resnet_final_weight.h5')
 #steps_per_epoch=tf.ceil(len(all_image_paths)/BATCH_SIZE).numpy()
 
-model.fit(image_label_ds, epochs=10, steps_per_epoch=10)                                    # 丟入 model 訓練
 
-model.save_weights('resnet_weight.h5')   #save our weight
+for times in range(0 , int(epochs/10)):
+	model.fit(image_label_ds, epochs=10, steps_per_epoch=100)                                    # 丟入 model 訓練
+	
+	model.save_weights('resnet_' + str(times*10) + 'weight.h5')   #save our weight
 
 
-
+model.save_weights('resnet_final_weight.h5')
 
 
 

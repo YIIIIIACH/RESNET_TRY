@@ -14,6 +14,8 @@ from tensorflow import keras
 L2_WEIGHT_DECAY = 0.001
 BATCH_NORM_DECAY = 0.001
 BATCH_NORM_EPSILON = 0.005
+epochs = 100
+
 
 def identity_block(input_tensor, kernel_size, filters):
     """The identity block is the block that has no conv layer at shortcut.
