@@ -12,16 +12,16 @@ from resnet  import resnet50
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # block the warning message on tensorflow
 #-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 											# # # #											
-epochs = 100
+epochs = 200
 										#PART 1#
 											# # # # 
 data_root = pathlib.Path('/home/yiiiiiach/MTCNN_TRY/')          #  打開  ./img_of_all.json 、image directory 將所有 landmark 與 bbox 標注 、圖片path 
 										   #  儲存到 1. all_image_paths  2. all_image_bbox 3. all_image_landmark 三個list 中
 
 ROOT_DIR = os.getcwd()
-align_image_path = os.path.join(ROOT_DIR,'img_celeba/')
+cele_image_path = os.path.join(ROOT_DIR,'img_celeba/')
 
-with open('./img5000.json', 'r') as f:
+with open('./img10000.json', 'r') as f:
 	data = json.load(f)	
 	tuple_of_data = len(data)	
 	print('tuple_of_data',tuple_of_data )
@@ -33,7 +33,7 @@ all_image_size = []
 
 
 for i in range(0,tuple_of_data):
-	all_image_paths.append( data[i][0]) 
+	all_image_paths.append( '/home/yiiiiiach/MTCNN_TRY/img_celeba/img_celeba/' + data[i][0]) 
 	all_image_bbox.append(data[i][1:5])
 	all_image_size.append(data[i][5:6])
 #random.shuffle(all_image_paths)          C O N S I D E R I N G   T O   U S E
@@ -76,7 +76,7 @@ image_label_ds = tf.data.Dataset.zip((image_ds, label_ds))                 #  im
 											# # # # 
 print('image_ds',image_ds)
 
-BATCH_SIZE = 36
+BATCH_SIZE = 24
 image_label_ds = image_label_ds.apply(tf.data.experimental.shuffle_and_repeat(buffer_size=1000))    # 將 image_label_ds 進行 1. 重排 2. batch化  等預處理
 image_label_ds  = image_label_ds.batch(BATCH_SIZE)
 image_label_ds = image_label_ds.prefetch(buffer_size=AUTOTUNE)
@@ -108,7 +108,7 @@ if os.path.isfile('weight_file/resnet_final_weight.h5'):
 
 
 for times in range(0 , int(epochs/10)):
-	model.fit(image_label_ds, epochs=10, steps_per_epoch=100)                                    # 丟入 model 訓練
+	model.fit(image_label_ds, epochs=10, steps_per_epoch=50)                                    # 丟入 model 訓練
 	
 	model.save_weights('weight_file/resnet_' + str(times*10) + 'weight.h5')   #save our weight
 
