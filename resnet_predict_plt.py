@@ -8,7 +8,7 @@ import json
 from os import listdir
 from os.path import isfile, join
 from tensorflow import keras
-from resnet  import resnet50
+from resnet  import small_resnet
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'  # block the warning message on tensorflow
 
@@ -54,11 +54,11 @@ def load_and_preprocess_image(path):
 
 										      #--------------------------------------------------------#
 
-model = resnet50( (48,48,3) )
+model = small_resnet( (48,48,3) )
 model.compile(optimizer=tf.keras.optimizers.RMSprop(0.001),
               loss={'bbox':'mean_squared_error'},loss_weights={'bbox':0.5  },metrics=["accuracy"])
 #model.summary()
-model.load_weights('weight_file/resnet_final_weight.h5')
+model.load_weights('weight_file/small_resnet_70weight.h5')
 #rand_seed = random.randint(1,tuple_of_data)
 #test_image_path =  '/home/yiiiiiach/MTCNN_TRY/img_celeba/img_celeba/'  + data[rand_seed][0]                 # the file to be test   #all_image_paths[rand_seed]
 
@@ -72,7 +72,7 @@ test_path = tf.data.Dataset.from_tensor_slices(list_img )
 test_image = test_path.map(load_and_preprocess_image , num_parallel_calls=AUTOTUNE)
 test_image = test_image.batch(1)
 
-result = model.predict(test_image)
+result = model.predict(test_image , steps =  1)
 
 
 bbox_result = result[0]

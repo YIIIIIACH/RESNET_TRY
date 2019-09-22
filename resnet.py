@@ -186,3 +186,63 @@ def resnet50( input_shape):
     # Create model.
     return tf.keras.models.Model(inputs=[img_input], outputs=[bbox], name='resnet50')
 
+
+def small_resnet( input_shape):
+    img_input = tf.keras.layers.Input(shape=input_shape)
+ 
+    if tf.keras.backend.image_data_format() == 'channels_first':
+        x = tf.keras.layers.Lambda(lambda x: tf.keras.backend.permute_dimensions(x, (0, 3, 1, 2)),
+                          name='transpose')(img_input)
+        bn_axis = 1
+    else:  # channels_last
+        x = img_input
+        bn_axis = 3
+ 
+    # Conv1 (7x7,64,stride=2)
+    x = tf.keras.layers.ZeroPadding2D(padding=(3, 3))(x)
+ 
+    x = tf.keras.layers.Conv2D(64, (7, 7),
+                      strides=(2, 2),
+                      padding='valid', use_bias=False,
+                      kernel_initializer='he_normal',
+                      kernel_regularizer=tf.keras.regularizers.l2(L2_WEIGHT_DECAY))(x)
+    x = tf.keras.layers.BatchNormalization(axis=bn_axis,
+                                  momentum=BATCH_NORM_DECAY,
+                                  epsilon=BATCH_NORM_EPSILON)(x)
+    x = tf.keras.layers.Activation('relu')(x)
+    x = tf.keras.layers.ZeroPadding2D(padding=(1, 1))(x)
+ 
+    # 3x3 max pool,stride=2
+    x = tf.keras.layers.MaxPooling2D((3, 3), strides=(2, 2))(x)
+ 
+    # Conv2_x
+ 
+    # 1×1, 64
+    # 3×3, 64
+    # 1×1, 256
+ 
+    x = conv_block(x, 3, [64, 64, 256], strides=(1, 1))
+    x = identity_block(x, 3, [64, 64, 256])
+    x = identity_block(x, 3, [64, 64, 256])
+ 
+    # Conv3_x
+    #
+    # 1×1, 128
+    # 3×3, 128
+    # 1×1, 512
+ 
+    x = conv_block(x, 3, [128, 128, 512])
+    x = identity_block(x, 3, [128, 128, 512])
+    x = identity_block(x, 3, [128, 128, 512])
+    x = identity_block(x, 3, [128, 128, 512])
+ 
+
+ 
+    # average pool, 1000-d fc, softmax
+    x = tf.keras.layers.GlobalAveragePooling2D()(x)
+
+    bbox = tf.keras.layers.Dense(  4,name='bbox', kernel_regularizer=tf.keras.regularizers.l2(L2_WEIGHT_DECAY),bias_regularizer=tf.keras.regularizers.l2(L2_WEIGHT_DECAY))(x)                                                 
+    
+    # Create model.
+    return tf.keras.models.Model(inputs=[img_input], outputs=[bbox], name='small_resnet')
+
